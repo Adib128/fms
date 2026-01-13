@@ -16,7 +16,12 @@ $errors = [];
 // Fetch data for dropdowns
 try {
     $vehicules = $db->query("SELECT id_bus, matricule_interne, marque, type FROM bus ORDER BY matricule_interne ASC")->fetchAll(PDO::FETCH_ASSOC);
-    $chauffeurs = $db->query("SELECT id_chauffeur, CONCAT(matricule, ' - ', nom_prenom) as nom_prenom FROM chauffeur ORDER BY nom_prenom ASC")->fetchAll(PDO::FETCH_ASSOC);
+    $chauffeurs = $db->query("
+        SELECT c.id_chauffeur, CONCAT(c.matricule, ' - ', c.nom_prenom, ' (', COALESCE(s.lib, 'Aucune agence'), ')') as nom_prenom 
+        FROM chauffeur c 
+        LEFT JOIN station s ON c.id_station = s.id_station 
+        ORDER BY c.nom_prenom ASC
+    ")->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $errors[] = "Erreur lors du chargement des données : " . $e->getMessage();
 }
@@ -95,7 +100,7 @@ enforceRouteAccess(getCurrentRoute(), getCurrentUserProfile());
             <div class="panel-heading">
                 <span>Détails de la passation</span>
             </div>
-            <div class="panel-body">
+            <div class="panel-body min-h-[600px]">
                 <form method="POST" class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Row 1: Date & Véhicule -->
